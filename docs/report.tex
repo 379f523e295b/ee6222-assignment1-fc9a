@@ -330,22 +330,21 @@ with greater accuracy and detail.
 The classifier goes right after the feature extraction
 module in the classification pipeline.
 
-Since our video data involves long-term dependencies,
-and is naturally sequential.
-Long Short-Term Memory (LSTM) is an automatic choice
-for this type of problem.
-The LSTM (\lstinline|keras.layers.LSTM|) is followed by 
-several decreasingly sized dense layers
-and a dense layer (\lstinline|keras.layers.Dense|)
-to perform the final multiclass classification.
-Softmax is performed by the loss evaluation method downstream.
-(\lstinline|keras.losses.SparseCategoricalCrossentropy| 
-with \lstinline|from_logits=True|)
-The dense layers are important,
-as they enable the abstraction of features
-and possess good generalizability.
+Given that our video data exhibits long-term dependencies 
+in a naturally sequential manner, the logical choice for 
+addressing this type of problem is Long Short-Term Memory (LSTM). 
+In our implementation, we utilize the LSTM module (\lstinline|keras.layers.LSTM|), 
+followed by a dense layer (\lstinline|keras.layers.Dense|) 
+for the purpose of multiclass classification. 
+The downstream process involves performing softmax 
+through the loss evaluation method, specifically using \lstinline|keras.losses.SparseCategoricalCrossentropy| 
+with \lstinline|from_logits=True|.
+The dense layers between LSTM and the final layer
+are omitted, as a simplified, consolidated
+architecture keeps the problem of catastrophic overfitting at bay,
+particularly in the case where the training dataset is small.
 
-The pros and cons of LSTM include:
+The pros and cons of LSTMs include:
 \begin{itemize}
   \item Pros
   \begin{description}
@@ -663,12 +662,15 @@ follows the same procedure described in the previous section.
 
 The result of our experiment
 shows that histogram equalization
-could enhance the performance of 
+does not enhance the performance of 
 a CNN-based frame sequence classification model
-to a certain extent.
-However, since the amount of data for training
+for this \emph{specific} dataset.
+However, this does not implicate that
+histogram equalization is necessarily detrimental 
+to the model's performance in any way.
+Since the amount of data for training
 is extremely limited, more data is needed for
-a more comprehensive evaluation of the model.
+a more comprehensive evaluation of the experiment.
 
 \section{End-to-end Training}
 The entire project is implemented with
