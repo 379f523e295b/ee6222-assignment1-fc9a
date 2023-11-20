@@ -1,0 +1,19 @@
+# notebook
+jupyter-spaces
+scrapbook 
+scrapbook-ext==0.0.0a2
+
+# viz
+matplotlib 
+pydot
+
+# math
+numpy
+
+# deep learning
+tensorflow 
+tensorflow-datasets
+keras-cv
+
+# dataset
+./datasets

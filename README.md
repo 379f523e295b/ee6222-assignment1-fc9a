@@ -1,5 +1,12 @@
 # EE6222 Assignment 1
 
+## Requirements
+- `requirements.txt`
+	Required packages to run `notebook.ipynb`
+	```sh
+    pip install -r requirements.txt
+    ```
+
 ## Maintenance
 - `.gitignore`
 	```sh

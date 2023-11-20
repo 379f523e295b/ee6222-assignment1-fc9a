@@ -24,8 +24,6 @@
 
 \usepackage[executable=python3]{pyluatex}
 
-% NOTE req git+https://github.com/oakaigh/pylatex2.git
-
 \begin{python}
   import scrapbook
   import scrapbook_ext.encoders.pickle
@@ -211,13 +209,14 @@ The pros and cons of each sampling techniques are as follows:
   \begin{python}
     d = noteref('data:frame_sampling')
     renderer.print(
-      r'''\caption{{}}'''.format(
+      r'''\caption{{{}}}\label{{figure:frame_sampling}}'''.format(
         rf'''Sampled frames of a video under the '''
-        rf'''`{d['label:name']}' category (encoded as {d['label']}). '''
+        rf'''`\lstinline|{d['label:name']}|' category '''
+        rf'''(encoded as \lstinline|{d['label']}|). '''
         rf'''As can be seen, the acitivity has recurring patterns.'''
       )
     )
-  \end{python}\label{figure:frame_sampling}
+  \end{python}
 \end{figure*}
 
 As illustrated in Figure \ref{figure:frame_sampling}, 
@@ -313,7 +312,7 @@ To illustrate --
 Apparently, our features could be further localized. 
 From an extracted bounding box of interest, a much more explainable model exists. 
 Psychological studies have found that humans are able to perform action recognition 
-by merely looking at a set of moving points on a body, 
+by merely looking at a set of moving points on a body~\citep{Johansson1973}, 
 indicating that key aspects of body language could 
 very well be encoded in these keypoints.
 One example of such a system is MoveNet, 
@@ -410,10 +409,11 @@ The pros and cons of LSTM include:
     }
   \end{subfigure}
   \caption{
-    The curve of diminishing loss and escalating accuracy.
+    The curve of diminishing loss and escalating accuracy
+    on the \emph{training} set.
     Despite some minor fluctuations, signs of overfitting 
     are nowhere to be found; yet,
-    our model still performs poorly on the validation set.
+    our model still performs poorly on the \emph{validation} set.
   }\label{figure:clf:train}
 \end{figure*}
 

@@ -1,0 +1,9 @@
+# notebook
+scrapbook 
+scrapbook-ext==0.0.0a2
+
+# latex
+git+https://github.com/oakaigh/pylatex2.git
+
+# viz
+matplotlib
