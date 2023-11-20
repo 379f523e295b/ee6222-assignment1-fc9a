@@ -1,0 +1,50 @@
+def __init__(self, im, cspace=None, ax=None):
+    self.im = im
+    self.cspace = cspace
+    self.ax = ax or self.plt.gca()
+
+def plot(
+    self,
+    bins=256,
+    cumulative=False,
+    labels=None, colors=None
+):
+    cspace_info = {
+        'rgb': {'labels': 'RGB', 'colors': 'rgb'}
+    }
+
+    shape_of = self.np.shape
+    reshape = self.np.reshape
+
+    for channel, color, label in zip(
+        range(shape_of(self.im)[-1]),
+        colors or cspace_info[self.cspace]['colors'],
+        labels or cspace_info[self.cspace]['labels'],
+    ):
+        self.ax.hist(
+            reshape(self.im[..., channel], (-1, )),
+            bins=bins,
+            cumulative=cumulative,
+            histtype='step' if cumulative else 'stepfilled',
+            color=color,
+            alpha=1. / shape_of(self.im)[-1],
+            label=label or channel,
+        )
+        self.ax.ticklabel_format(
+            axis='y',
+            style='scientific',
+            scilimits=(0, 0),
+        )
+
+    return self
+
+def xylabel(self):
+    self.ax.set(
+        xlabel='Intensity',
+        ylabel='Count',
+    )
+    return self
+
+def legend(self, *args, **kwargs):
+    self.ax.legend(*args, **kwargs)
+    return self

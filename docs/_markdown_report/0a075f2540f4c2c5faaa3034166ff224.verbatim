@@ -1,0 +1,34 @@
+@classmethod
+def stacked(cls, im, fig=None, subplot_kwds=dict(), **kwargs):
+    fig = fig or cls.plt.gcf()
+    return cls(
+        im,
+        axes=fig.subplots(
+            nrows=2, ncols=1,
+            sharex=True, sharey=False,
+            **subplot_kwds,
+        ).flat,
+        **kwargs,
+    )
+
+def __init__(self, im, axes, **histviz_kwds):
+    self.im = im
+    self.viz_hist = {
+        key: ImageHistViz(im, ax=ax, **histviz_kwds)
+        for key, ax in zip(['noncum', 'cum'], axes)
+    }
+
+def plot(self):
+    self.viz_hist['noncum'].plot(cumulative=False)
+    self.viz_hist['cum'].plot(cumulative=True)
+    return self
+
+def xylabel(self):
+    for viz in self.viz_hist.values():
+        viz.xylabel()
+    return self
+
+def legend(self, *args, **kwargs):
+    for viz in self.viz_hist.values():
+        viz.legend(*args, **kwargs)
+    return self

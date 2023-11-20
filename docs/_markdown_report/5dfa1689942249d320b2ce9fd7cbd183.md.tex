@@ -1,0 +1,20 @@
+\markdownRendererDocumentBegin
+\markdownRendererBackslash{}par\markdownRendererBackslash{}noindent\markdownRendererBackslash{}ignorespaces\markdownRendererBackslash{}begin\markdownRendererLeftBrace{}lstlisting\markdownRendererRightBrace{}[frame=lines, basicstyle=\markdownRendererBackslash{}footnotesize\markdownRendererBackslash{}ttfamily] class ImageHistViz: import numpy as np import matplotlib.pyplot as plt\markdownRendererInterblockSeparator
+{}\markdownRendererInputVerbatim{./_markdown_report/ce6e4e1bd02886c388ad10b61b1c0068.verbatim}\markdownRendererInterblockSeparator
+{}\markdownRendererBackslash{}end\markdownRendererLeftBrace{}lstlisting\markdownRendererRightBrace{} \markdownRendererBackslash{}par\markdownRendererBackslash{}noindent\markdownRendererBackslash{}ignorespaces\markdownRendererBackslash{}begin\markdownRendererLeftBrace{}lstlisting\markdownRendererRightBrace{}[frame=lines, basicstyle=\markdownRendererBackslash{}footnotesize\markdownRendererBackslash{}ttfamily] class ImageHistVizGallery: import matplotlib.pyplot as plt\markdownRendererInterblockSeparator
+{}\markdownRendererInputVerbatim{./_markdown_report/0a075f2540f4c2c5faaa3034166ff224.verbatim}\markdownRendererInterblockSeparator
+{}\markdownRendererBackslash{}end\markdownRendererLeftBrace{}lstlisting\markdownRendererRightBrace{} \markdownRendererBackslash{}par\markdownRendererBackslash{}noindent\markdownRendererBackslash{}ignorespaces\markdownRendererBackslash{}begin\markdownRendererLeftBrace{}lstlisting\markdownRendererRightBrace{}[frame=lines, basicstyle=\markdownRendererBackslash{}footnotesize\markdownRendererBackslash{}ttfamily]\markdownRendererInterblockSeparator
+{}\markdownRendererSectionBegin
+\markdownRendererHeadingOne{\markdownRendererPercentSign{}\markdownRendererPercentSign{}space demo:enhancement}\markdownRendererInterblockSeparator
+{}imageseq = take\markdownRendererEmphasis{one(ds['train'])['frameseq'] def \markdownRendererEmphasis{imageseq}plot}before\markdownRendererUnderscore{}after(fig=None): if fig is None: fig = plt.gca()\markdownRendererInterblockSeparator
+{}\markdownRendererInputVerbatim{./_markdown_report/b3ac48ccbb466497babcae1794c857a5.verbatim}\markdownRendererInterblockSeparator
+{}
+\markdownRendererSectionEnd \markdownRendererSectionBegin
+\markdownRendererHeadingOne{images}\markdownRendererInterblockSeparator
+{}fig\markdownRendererEmphasis{im = plt.figure() for (im, title), subfig in \markdownRendererEmphasis{imageseq}plot}before\markdownRendererEmphasis{after(fig}im): ax = subfig.subplots() ax.axis('off') ax.imshow(im) fig\markdownRendererEmphasis{im.show() scrapbook.glue( 'demo:enhancement:im', fig}im, encoder='pickle' )\markdownRendererInterblockSeparator
+{}
+\markdownRendererSectionEnd \markdownRendererSectionBegin
+\markdownRendererHeadingOne{image histograms}\markdownRendererInterblockSeparator
+{}fig\markdownRendererEmphasis{imhist = plt.figure() for (im, title), subfig in \markdownRendererEmphasis{imageseq}plot}before\markdownRendererEmphasis{after(fig}imhist): ( ImageHistVizGallery.stacked( im, cspace='rgb', fig=subfig, ) .plot() .xylabel() ) fig\markdownRendererEmphasis{imhist.show() scrapbook.glue( 'demo:enhancement:imhist', fig}im, encoder='pickle' ) \markdownRendererBackslash{}end\markdownRendererLeftBrace{}lstlisting\markdownRendererRightBrace{} \markdownRendererBackslash{}par\markdownRendererBackslash{}noindent\markdownRendererBackslash{}ignorespaces\markdownRendererBackslash{}begin\markdownRendererLeftBrace{}lstlisting\markdownRendererRightBrace{}[frame=lines, basicstyle=\markdownRendererBackslash{}footnotesize\markdownRendererBackslash{}ttfamily]\markdownRendererInterblockSeparator
+{}\markdownRendererBackslash{}end\markdownRendererLeftBrace{}lstlisting\markdownRendererRightBrace{}
+\markdownRendererSectionEnd \markdownRendererDocumentEnd

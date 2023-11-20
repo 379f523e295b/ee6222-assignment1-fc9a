@@ -1,0 +1,28 @@
+fig = plt.figure()
+subfigs = fig.subfigures(nrows=2, ncols=1).flat
+
+for fig_, suptitle_, sampler_cls_ in [
+    (subfigs[0], 'Interval (Uniform)', IntervalSampling),
+    (subfigs[1], 'Random', RandomSampling),
+]:
+    sampler_cls_: typing.Type[BaseSampling]
+
+    fig_.suptitle(suptitle_)
+    frame_indices = sampler_cls_(
+        n_samples=n_samples,
+        axis=0,
+    )._sample_indices(frameseq)
+
+    axes = fig_.subplots(
+        nrows=1,
+        ncols=len(frame_indices)
+    )
+    for ax, frame_idx in zip(
+        axes.flat,
+        frame_indices,
+    ):
+        ax.axis('off')
+        ax.imshow(frameseq[frame_idx])
+        ax.set(title=int(frame_idx))
+
+fig.show()

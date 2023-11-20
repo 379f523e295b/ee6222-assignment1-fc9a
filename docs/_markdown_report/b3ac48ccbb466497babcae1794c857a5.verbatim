@@ -1,0 +1,10 @@
+subfigs = fig.subfigures(nrows=1, ncols=2)
+for (im, title), subfig in zip(
+    [
+        (imageseq[0].numpy(), 'Before'),
+        (Augmentation()(imageseq)[0].numpy().astype(int), 'After')
+    ],
+    subfigs.flat,
+):
+    subfig.suptitle(title)
+    yield (im, title), subfig

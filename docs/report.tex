@@ -1,0 +1,739 @@
+\documentclass[letterpaper]{article} % For LaTeX2e
+\usepackage{iclr/iclr2021/iclr2021_conference,times}
+
+% Optional math commands from https://github.com/goodfeli/dlbook_notation.
+\input{iclr/iclr2021/math_commands.tex}
+
+\usepackage{hyperref}
+\usepackage{url}
+
+\usepackage{pgf}
+\usepackage{import}
+
+\usepackage{url}
+\usepackage{unicode-math}
+\usepackage{amsmath}
+
+\usepackage{caption}
+\usepackage{subcaption}
+
+\usepackage{booktabs}
+\usepackage{hyperref}
+
+\usepackage{markdown}
+
+\usepackage[executable=python3]{pyluatex}
+
+% NOTE req git+https://github.com/oakaigh/pylatex2.git
+
+\begin{python}
+  import scrapbook
+  import scrapbook_ext.encoders.pickle
+  scrapbook_ext.encoders.pickle.load()
+
+  notebook = scrapbook.read_notebook('../notebook.ipynb')
+  noteref = lambda x: notebook.scraps[x].data
+\end{python}
+
+\begin{python}
+  import matplotlib as mpl
+\end{python}
+
+
+\begin{python}
+  import pylatex2
+  import pylatex2.base
+  import pylatex2.package.builtin
+  import pylatex2.package.pgf
+  import pylatex2.package.graphicx
+  import pylatex2.package.graphicx.matplotlib
+  import pylatex2.package.amsmath.matrix
+  import pylatex2.package.pgf.matplotlib
+
+  Itemize = pylatex2.package.builtin.Itemize
+  Matrix = pylatex2.package.amsmath.matrix.Matrix
+  Graphics = pylatex2.package.graphicx.Graphics
+  InlineGraphics = pylatex2.package.graphicx.matplotlib.InlineGraphics
+  InlinePGraphics = pylatex2.package.pgf.matplotlib.InlinePGraphics
+
+  class UserRenderer:
+    def __init__(self):
+      self._refs = []
+
+    def print(self, *objs, **kwargs):
+      for o in objs:
+        if isinstance(o, pylatex2.base.BaseElement):
+          self._refs.append(o)
+          o = o.__text__()
+        print(o, **kwargs)
+
+  renderer = UserRenderer()
+\end{python}
+
+\begin{python}
+  import numpy as np
+\end{python}
+
+\usepackage{listings}
+\lstset{
+  basicstyle=\ttfamily,
+  columns=fixed,
+  %columns=fullflexible,
+  breaklines=true,
+  prebreak=true,
+  prebreak=\raisebox{0ex}[0ex][0ex]
+        {\ensuremath{\:\hookleftarrow}},
+  postbreak=\raisebox{0ex}[0ex][0ex]
+        {\ensuremath{\hookrightarrow\:}}
+}
+
+\usepackage[inline]{enumitem}
+
+
+
+\title{
+  Human Action Recognition in the Dark: \\
+  A Simple Exploration with Late Fusion and Image Enhancement
+}
+
+\author{
+  Student \\
+  School of Electrical and Electronic Engineering \\
+  Nanyang Technological University \\
+  50 Nanyang Avenue, Singapore 639798
+}
+
+% The \author macro works with any number of authors. There are two commands
+% used to separate the names and addresses of multiple authors: \And and \AND.
+%
+% Using \And between authors leaves it to \LaTeX{} to determine where to break
+% the lines. Using \AND forces a linebreak at that point. So, if \LaTeX{}
+% puts 3 of 4 authors names on the first line, and the last on the second
+% line, try using \AND instead of \And before the third author name.
+
+\newcommand{\fix}{\marginpar{FIX}}
+\newcommand{\new}{\marginpar{NEW}}
+
+%\iclrfinalcopy % Uncomment for camera-ready version, but NOT for submission.
+\begin{document}
+
+
+\maketitle
+
+\begin{abstract}
+Human action recognition (HAR) in low-light or dark environments 
+presents unique challenges, often exacerbated by inadequate visibility 
+and the absence of clear visual cues.
+While a biological eye can overcome such limitation
+by autotuning the sensitivity of retinal ganglion cells (RGC neurons)
+before feeding the visual data to the next layer down the pathway,
+immitating such a mechanism in an artifical neural network
+remains challenging under limited understanding of the human visual cortex.
+This paper aims to explore the possibilities of
+improving the performance of HAR with simple and explanable models
+through end-to-end training, with the hope of achieving the 
+aforementioned close-to-human level of performance.
+Our study revolves around an innovative dataset and a modular pipeline.
+\end{abstract}
+
+\section{Frame Sampling}
+To investigate the impact of different frame sampling strategies 
+on Human Activity Recognition (HAR), we will consider 
+videos from each category and 
+compare the outcomes of uniform sampling and random sampling. 
+
+Like in our previous study, 
+each of the frame samplers is implemented as 
+an information processing unit 
+(\lstinline|keras.Model| or \lstinline|keras.layers.Layer|).
+Each unit takes a batch of frame sequences of the video
+within the dataset and outputs a batch of the sampled frames.
+
+The pros and cons of each sampling techniques are as follows:
+\begin{itemize}
+  \item Uniform Sampling
+    \begin{itemize}
+      \item Pros 
+        \begin{description}
+          \item[Equal Representation]
+            It ensures that each frame in the video 
+            has an equal chance of being included in the training set,
+            which prevents bias towards certain actions over time periods.
+          \item[Consistent Data Distribution]
+            It helps maintain a consistent distribution of samples across 
+            different classes and time periods, 
+            which can be important for achieving a 
+            balanced and representative training set.
+        \end{description}
+      \item Cons
+        \begin{description}
+          \item[Irrelevant Information]
+            It may lead to the inclusion of redundant or less informative frames 
+            while potentially missing crucial frames that capture important actions. 
+            This could be a limitation if certain actions are rare but critical.
+          \item[Ignored Temporal Dynamics]
+            In some cases, actions may have varying temporal dynamics, 
+            and uniform sampling might not capture the full range of motion 
+            or transitions between frames.
+        \end{description}
+    \end{itemize}
+
+  \item Random Sampling
+    \begin{itemize}
+      \item Pros
+      \begin{description}
+        \item[Temporal Variability]
+          It's capable of capturing the temporal variability of actions, 
+          ensuring that the model is exposed to different instances of actions across time. 
+          This can be important for recognizing actions with varying speeds or durations.
+        \item[Interoperability with Models]
+          Combined with the shuffling of batches,
+          it makes the input to the model more diverse.
+          This prevents overfitting.
+      \end{description}
+      \item Cons
+      \begin{description}
+        \item[Reproducibility]
+          It makes experiments less reproducible, as each run may yield a different set of training samples. 
+          This can make it challenging to compare results across different runs.
+      \end{description}
+    \end{itemize}
+\end{itemize}
+
+\begin{figure*}[t]
+  \centering
+  \renewcommand\sffamily{}
+  \begin{python}
+    f = noteref('figure:frame_sampling')
+    f.set(size_inches=(5, 2.5))
+    renderer.print(InlinePGraphics(f))
+  \end{python}
+  \begin{python}
+    d = noteref('data:frame_sampling')
+    renderer.print(
+      r'''\caption{{}}'''.format(
+        rf'''Sampled frames of a video under the '''
+        rf'''`{d['label:name']}' category (encoded as {d['label']}). '''
+        rf'''As can be seen, the acitivity has recurring patterns.'''
+      )
+    )
+  \end{python}\label{figure:frame_sampling}
+\end{figure*}
+
+As illustrated in Figure \ref{figure:frame_sampling}, 
+the activities involved in our dataset, 
+including jump, run, sit, stand, turn, and walk, 
+are inherently mundane and exhibit no significant temporal variations within the spatial domain. 
+In scenarios where the actions are relatively straightforward and lack pronounced temporal dynamics, 
+uniform sampling is a pragmatic choice for the initial sampling strategy.
+The author theorizes that uniform sampling would not hurt the downstream model's
+generalizability.
+
+\section{Feature Extraction}
+The feature extraction module is designed to 
+extract valuable spatial information from each frame (or image) 
+in the video dataset while preserving 
+the temporal relationships between frames.
+
+\subsection{Model: ConvNeXt}
+A suitable model for such task is
+a time distributed 2D Convolutional Neural Network (CNN),
+bearing a 3D structure. 
+
+ConvNeXt, a notable example of the latest CNN-based models,
+``compete(s) favorably with Transformers in terms of 
+accuracy and scalability, achieving 87.8\% ImageNet top-1 accuracy''
+~\citep{liu2022convnet}.
+ConvNeXt retains the simplicity and efficiency of standard CNNs
+while still manages to be accurate.
+As its trained and fine-tuned on a large dataset (ImageNet),
+it is particularly suitable for a video classification task,
+where the features are oftentimes diverse.
+The version of ConvNeXt selected for this experiment,
+ConvNeXt-S (small), has 50 million parameters 
+and an impressive 85.8\% top-1 accuracy~\citep{liu2022convnet}.
+
+As for the implementation,
+\lstinline|tensorflow.keras|'s implementation of ConvNeXt 
+incorporates builtin data preprocessing and output postprocessing,
+which eliminates the need for dedicated preprocessing and postprocessing layers.
+The general pipeline of data processing in ConvNeXt is as follows:
+\begin{description}
+  \item[Normalization]
+  This normalizes the pixel data of each frame on the last axis, 
+  which is the channel axis.
+  \item[Transformation]
+  This transforms the normalized input data using the network's pretrained weights.
+  \item[Pooling]
+  By the \lstinline|pooling='avg'| option, the network performs postprocessing by
+  global average pooling, which effectively reduces the output dimension.
+\end{description}
+
+Like every information module in this paper,
+ConvNeXt supports batch processing.
+
+\subsection{Experiment: Frame Sampling + Feature Extraction}
+The sampled frame feature extraction process is 
+characterized by the following input and output specifications:
+\begin{description}
+  \item[Input]
+  Shape: \begin{itemize}
+    \item Batch Size
+    \item Frame Count
+    \item Frame Width
+    \item Frame Height
+    \item Frame Channel Count
+  \end{itemize}
+  \item[Output] 
+  Shape: \begin{itemize}
+    \item Batch Size
+    \item Frame Count (result of frame sampling)
+    \item Feature Count (result of feature extraction)
+  \end{itemize}
+\end{description}
+It is important to note that the batch size remains 
+constant throughout the operation. During the process, 
+each frame undergoes conversion into a feature vector, 
+the shape of which is determined by the feature extraction module. 
+Additionally, it is expected that the frame count 
+will be reduced as a result of frame sampling.
+
+To illustrate --
+\begin{python}
+  report_feat = noteref('data:feat_extraction')
+  renderer.print(
+    rf'''For a ragged input of shape \lstinline|{report_feat['shape:input']}|, '''
+    rf'''the shape of the output is \lstinline|{report_feat['shape:output']}|, '''
+    rf'''where \lstinline|{report_feat['placeholder:shape']}| '''
+    rf'''represents a variable length.'''
+  )
+\end{python}
+
+\subsection{Discussion: Improvements}
+Apparently, our features could be further localized. 
+From an extracted bounding box of interest, a much more explainable model exists. 
+Psychological studies have found that humans are able to perform action recognition 
+by merely looking at a set of moving points on a body, 
+indicating that key aspects of body language could 
+very well be encoded in these keypoints.
+One example of such a system is MoveNet, 
+which accurately identifies and tracks these keypoints. 
+In our CNN-only model, we use these keypoints (pixels) more directly. 
+However, for MoveNet, instead of combining them at a later stage (late fusion), 
+we input them into an embedding layer at an earlier stage. 
+This method allows for a more nuanced processing of ``body language'', 
+enabling our model to interpret and analyze human movements 
+with greater accuracy and detail.
+
+\section{Classifier Training and Evaluation}
+
+\subsection{Architecture}
+The classifier goes right after the feature extraction
+module in the classification pipeline.
+
+Since our video data involves long-term dependencies,
+and is naturally sequential.
+Long Short-Term Memory (LSTM) is an automatic choice
+for this type of problem.
+The LSTM (\lstinline|keras.layers.LSTM|) is followed by 
+several decreasingly sized dense layers
+and a dense layer (\lstinline|keras.layers.Dense|)
+to perform the final multiclass classification.
+Softmax is performed by the loss evaluation method downstream.
+(\lstinline|keras.losses.SparseCategoricalCrossentropy| 
+with \lstinline|from_logits=True|)
+The dense layers are important,
+as they enable the abstraction of features
+and possess good generalizability.
+
+The pros and cons of LSTM include:
+\begin{itemize}
+  \item Pros
+  \begin{description}
+    \item[Long-Term Dependency Handling]
+      LSTM effectively puts sequential data in context
+      over extended periods of time.
+      This is crucial for our experiment
+      as human actions are better interpreted
+      in broad, time-domain based contexts.
+    \item[Information Retention]
+      Much like the hippocampus in a brain, 
+      LSTMs utilize memory cells, which allow them to 
+      selectively remember or forget information. 
+      This ability is useful for tasks where 
+      retaining \emph{relevant} information over time is important.
+      Over-rembering irrelevant information can lead to overfitting.
+  \end{description} 
+  \item Cons
+  \begin{description}
+    \item[Computational Complexity]
+      Since LSTM is a deep recurrent neural network,
+      it's computationally expensive.
+    \item[Interpretability]
+      LSTMs, like many deep learning models, 
+      are often considered as ``black-box'' models. 
+      Understanding the internal representations and 
+      decision-making processes of LSTMs can be challenging, 
+      which may be a drawback in certain applications where interpretability is crucial.
+    \item[Overfitting]
+      LSTMs, like almost all deep learning models, 
+      are prone to overfitting, especially when dealing with small datasets. 
+      Regularization techniques and careful tuning of hyperparameters are possible,
+      but they will only fix the problem to a certain extent.
+  \end{description} 
+\end{itemize}
+
+\subsection{Training}
+\begin{figure*}[t!]
+  \centering
+  \renewcommand\sffamily{}
+  \begin{subfigure}[t]{.45\textwidth}
+    \centering
+    \begin{python}
+      f = noteref('figure:clf:train:loss')
+      f.set(size_inches=(2.5, 2.5))
+      renderer.print(InlinePGraphics(f))
+    \end{python}
+    \subcaption{
+      The training losses over time.
+    }
+  \end{subfigure}
+  \begin{subfigure}[t]{.45\textwidth}
+    \centering
+    \begin{python}
+      f = noteref('figure:clf:train:acc')
+      f.set(size_inches=(2.5, 2.5))
+      renderer.print(InlinePGraphics(f))
+    \end{python}
+    \subcaption{
+      The training accuracies over time. 
+    }
+  \end{subfigure}
+  \caption{
+    The curve of diminishing loss and escalating accuracy.
+    Despite some minor fluctuations, signs of overfitting 
+    are nowhere to be found; yet,
+    our model still performs poorly on the validation set.
+  }\label{figure:clf:train}
+\end{figure*}
+
+For training, cross-validation is done on the above base model.
+
+\subsubsection{Fitting}
+The model is trained under the following parameters:
+\begin{description}
+  \item[Epochs]
+  Due to the use of cross-validation,
+  we use a small number of epochs (iterations) for training
+  within each cross-validation session.
+  \item[Batch Size]
+  The batch size is proportional to the number of classes in the dataset. 
+  This is done to ensure that the model receives a representative sample 
+  from each class during training, promoting better generalization to 
+  diverse class distributions.
+  \item[Optimizer]
+  The optimizer selected for our model is 
+  Adaptive Moment Estimation (Adam)
+  for its adaptive learning rate. 
+  It prevents the optimizer from getting stuck in local minima 
+  and accelerates convergence.
+  \item[Early Stopping]
+  The loss of our model is monitored throughout
+  the training period; once it does not increase
+  over a certain number of epochs, it stops training
+  to prevent overfitting.
+\end{description}
+
+\subsubsection{Cross-validation}
+As the amount of data for training is extremely limited,
+stratified k-Fold cross validation is used to ensure a better
+coverage of the data. 
+Upon initial training and evaluation, the author has observed 
+a severe problem of overfitting; although the issue was somehow
+mitigated by adding dropout layers within the LSTM and in-between
+the subsequent layers, the testing accuracy was still not high.
+Therefore, the aforementioned cross validation technique was introduced.
+
+The general procedure of cross-validation is as follows:
+\begin{description}
+  \item[Data Splitting] 
+  The entire dataset is randomly divided into $k$ equal-sized folds. 
+  \item[Model Training and Validation] 
+  This process is repeated $k$ times, with each of the $k$ folds 
+  serving as the validation set once, 
+  and the remaining $k - 1$ folds forming the training set.
+  \begin{itemize}
+      \item In the first iteration, the first fold is the validation set, 
+        and the remaining folds are the training set.
+      \item This process is repeated until each fold has served as the validation set once.
+  \end{itemize}
+  \item[Performance Measurement] 
+  After each training and validation on a fold, 
+  the model's performance is measured using metrics like accuracy or precision. 
+  This gives a performance score for each fold.
+  The metrics are subsequently used to update the model,
+  if applicable. In our experiment, the validation loss is used
+  to update the weights of our model through backpropagation.
+\end{description}
+
+Implementation wise, our cross-validator makes use of 
+the \lstinline|tensorflow_dataset| API
+and generates data iteratively;
+the stratification of our data is automatically 
+implemented by \lstinline|tensorflow_dataset|'s 
+batch sampling mechanism,
+where the proportions of each class within the dataset are 
+preserved with the best effort possible for each batch.
+
+\subsection{Evaluation}
+The performance of the model
+is evaluated on the validation dataset
+by categorical accuracy.
+
+\begin{python}
+  d = noteref('data:clf:val')
+  renderer.print(
+    rf'''The model has a loss of {d['loss']} ''' 
+    rf'''and an accuracy of {d['accuracy']}.'''
+  )
+\end{python}
+
+Apparently, this is not ideal. 
+Although our feature extraction module is pretrained,
+its weights are all likely derived from 
+the features in non-challenging environments,
+allegedly the ones with good illumination.
+We theorize that the classifier's performance will increase
+once a means of illuminance enhancement is applied.
+
+\section{Classifier Training and Evaluation with Image Enhancements}
+\subsection{Histogram Equalization}
+\begin{figure*}[t!]
+  \centering
+  \renewcommand\sffamily{}
+  \begin{subfigure}[t]{\textwidth}
+    \centering
+    \begin{python}
+      f = noteref('figure:clf_augment:augment:histeq:im')
+      f.set(size_inches=(5, 2))
+      renderer.print(InlinePGraphics(f))
+    \end{python}
+    \subcaption{
+      The image before (left) and after (right) the equalization.
+      Notice the dramatic improvement in brightness and contrast,
+      as well as the reduction in overall visual quality.
+      This can be attributed to the dramatic changes in the image's color balance,
+      the over-amplification of artifacts present in the original image.
+    }
+  \end{subfigure}
+  \begin{subfigure}[t]{\textwidth}
+    \centering
+    \begin{python}
+      f = noteref('figure:clf_augment:augment:histeq:imhist')
+      f.set(size_inches=(5, 4))
+      renderer.print(InlinePGraphics(f))
+    \end{python}
+    \subcaption{
+      The histograms (top) and CDFs (bottom) 
+      of the images before (left) and after (right) the equalization.
+      The distributions of pixel intensities become roughly normal as expected. 
+    }
+  \end{subfigure}
+  \caption{
+    The effect of histogram equalization.
+  }\label{figure:clf_augment:augment:histeq}
+\end{figure*}
+
+In dark conditions, images often suffer from poor contrast, 
+making it difficult to distinguish between the subject and the background. 
+Histogram equalization comes to rescue by 
+adjusting the brightness levels across the image, 
+enhancing the contrast and making the human figures 
+more distinguishable from their surroundings.
+
+Our deep learning model relies heavily 
+on the extraction of features such as edges, shapes, and textures. 
+By improving the contrast of the images, 
+we theorize that histogram equalization could 
+make these features more pronounced and easier to detect, 
+leading to more accurate 
+localization of human figures and recognition of human actions.
+
+Although the original algorithm only works on single-channel images, 
+it can be extended by running equalization on the channels individually
+and piece together the end results to form an enhanced multi-channel image.
+In \lstinline|tensorflow|, this is already
+available as an equalization layer, 
+\lstinline|keras_cv.layers.Equalization|.
+
+The algorithm works as follows:
+\begin{description}
+  \item[Histogram Normalization]
+  For a grayscale image, the histogram $H(i)$ 
+  represents the frequency of each intensity level. 
+  It's defined as 
+  \begin{equation*}
+    H(i) = \text{Number of pixels with intensity $i$}
+  \end{equation*}
+  Where \begin{itemize}
+    \item $i$ the intensity level.
+  \end{itemize}
+
+  The histogram is then normalized,
+  through any statistically plausible normalization
+  technique such as mean normalization:
+  \begin{equation*}
+    h(i) = \frac{H(i)}{N}
+  \end{equation*}
+  Where \begin{itemize}
+    \item $N$ the total number of pixels.
+  \end{itemize}
+
+  \item[CDF (Cumulative Distribution Function) Calculation]
+  The CDF, $C(i)$, accumulates the sum of the histogram values 
+  up to a certain intensity level. It's defined as:
+  \begin{equation*}
+    C(i) = \sum_{j=0}^{i} h(j)
+  \end{equation*}
+  Where \begin{itemize}
+    \item $i$ the intensity level.
+  \end{itemize}
+
+  \item[Equalization]
+  The histogram equalization maps the original intensity levels to new levels. 
+  The new intensity level $I_{\text{new}}(i)$ is calculated by:
+  \begin{equation*}
+    I_\text{new}(i) =  
+      \frac{(L - 1) \cdot C(i)}{N}
+  \end{equation*}
+  Where \begin{itemize}
+    \item $L$ the number of possible intensity levels.
+  \end{itemize}
+
+  Each pixel in the original image with intensity $i$ is then
+  mapped to a new intensity $I_{\text{new}}(i)$. 
+  This results in an image with a more uniform distribution of intensities 
+  (Figure \ref{figure:clf_augment:augment:histeq}).
+\end{description}
+
+\subsection{Training}
+\begin{figure*}[t!]
+  \centering
+  \renewcommand\sffamily{}
+  \begin{subfigure}[t]{.45\textwidth}
+    \centering
+    \begin{python}
+      f = noteref('figure:clf_augment:train:loss')
+      f.set(size_inches=(2.5, 2.5))
+      renderer.print(InlinePGraphics(f))
+    \end{python}
+    \subcaption{
+      The training losses over time.
+    }
+  \end{subfigure}
+  \begin{subfigure}[t]{.45\textwidth}
+    \centering
+    \begin{python}
+      f = noteref('figure:clf_augment:train:acc')
+      f.set(size_inches=(2.5, 2.5))
+      renderer.print(InlinePGraphics(f))
+    \end{python}
+    \subcaption{
+      The training accuracies over time. 
+    }
+  \end{subfigure}
+  \caption{
+    The curve of diminishing loss and escalating accuracy, again.
+    Image enhancement is used with the hope of improving the model.
+  }\label{figure:clf_augment:train}
+\end{figure*}
+
+The training of the model with image enhancement
+follows the same procedure described in the previous section.
+
+\subsection{Evaluation}
+\begin{python}
+  d = noteref('data:clf_augment:val')
+  renderer.print(
+    'Through image enhancement, '
+    rf'''the model has achieved a loss of {d['loss']} ''' 
+    rf'''and an accuracy of {d['accuracy']}.'''
+  )
+\end{python}
+
+The result of our experiment
+shows that histogram equalization
+could enhance the performance of 
+a CNN-based frame sequence classification model
+to a certain extent.
+However, since the amount of data for training
+is extremely limited, more data is needed for
+a more comprehensive evaluation of the model.
+
+\section{End-to-end Training}
+The entire project is implemented with
+simplicity and modularity in mind,
+under the influence of the UNIX principle.
+Therefore, all modules (layers and models)
+within our project is automatically end-to-end,
+with end-to-end training enabled by
+chaining the modules, i.e. the information processing units,
+together through \lstinline|keras.layers.Sequential|. 
+
+In terms of performance, 
+our end-to-end model exhibits higher time complexity compared to 
+its distributed non-end-to-end counterparts, 
+primarily because the features must be regenerated with each iteration. 
+However, this challenge is not insurmountable. 
+By employing caching, distributed computing, and parallelization strategies, 
+we can harness the computational prowess of multiple machines 
+or processing units to alleviate the complexities posed by 
+increased computational demands.
+
+Conversely, this approach eliminates the necessity to 
+explicitly store features, thereby reducing the runtime storage complexity 
+of the model. Through thoughtful implementation of these strategies, 
+we can strike a balance between computational efficiency 
+and storage requirements, optimizing the overall performance of our model.
+
+For details on the training and evaluation procedure,
+refer to the code in Appendix \ref{appendix:code}.
+
+\bibliography{references}
+\bibliographystyle{iclr/iclr2021/iclr2021_conference}
+
+\appendix
+\section{Appendix}\label{appendix:code}
+The code used to run the experiment, written in a Jupyter notebook.
+An IPython interpreter is required.
+Additional code for parsing the dataset is available upon request.
+
+\begin{python}
+  def _print_lstlisting(content: str):
+    return renderer.print(
+      r'\par\noindent\ignorespaces'
+      r'\begin{lstlisting}'
+      r'[frame=lines,'
+      r' basicstyle=\footnotesize\ttfamily]',
+      content,
+      r'\end{lstlisting}',
+    )
+
+  def _print_markdown(content: str):
+    return renderer.print(
+      r'\begin{markdown}',
+      content,
+      r'\end{markdown}',
+    )
+
+  for cell in notebook.cells:
+    {
+      'code': _print_lstlisting,
+      'markdown': _print_markdown
+    }.get(
+      cell.cell_type,
+      _print_lstlisting
+    )(cell.source)
+\end{python}
+
+\end{document}
