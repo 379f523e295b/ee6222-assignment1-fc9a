@@ -1,0 +1,3 @@
+[submodule "docs/iclr"]
+	path = docs/iclr
+	url = https://github.com/ICLR/Master-Template.git
